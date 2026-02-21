@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Online Book Store</title>
+<link rel="stylesheet" href="css/style.css">
+
+<style>
+
+/* CONTACT MODAL STYLE */
+#contactModal{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.5);
+justify-content:center;
+align-items:center;
+z-index:999;
+}
+
+.contact-box{
+background:white;
+padding:25px;
+width:350px;
+border-radius:10px;
+}
+
+.contact-box input,
+.contact-box textarea{
+width:100%;
+padding:10px;
+margin:8px 0;
+border:1px solid #ccc;
+border-radius:5px;
+}
+
+.contact-box button{
+width:100%;
+padding:10px;
+border:none;
+margin-top:10px;
+cursor:pointer;
+border-radius:5px;
+}
+
+.send-btn{
+background:#f59e0b;
+color:white;
+}
+
+.close-btn{
+background:gray;
+color:white;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+<h2 class="logo">BookStore</h2>
+
+<ul class="nav-links">
+<li><a href="#">Home</a></li>
+<li><a href="#books">Books</a></li>
+<li><a href="cart.html">Cart</a></li>
+<li><a href="#" onclick="openContact()">Contact</a></li>
+<li><a href="#" id="authLink">Logout</a></li>
+</ul>
+
+<div class="search-box">
+<input type="text" id="searchInput" placeholder="Search books...">
+</div>
+
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+<h1>Welcome to Online Book Store</h1>
+<p>Find the best programming books here</p>
+<button class="btn" onclick="window.location.href='#books'">Shop Now</button>
+</section>
+
+<!-- Books -->
+<section class="books" id="books">
+<h2>Popular Books</h2>
+
+<div class="book-container">
+
+<div class="book-card">
+<img src="images/c.jpg">
+<h3>C Programming</h3>
+<p class="price">₹299</p>
+<button class="btn" onclick="addToCart('C Programming',299)">Add to Cart</button>
+</div>
+
+<div class="book-card">
+<img src="images/cpp.jpg">
+<h3>C++ Programming</h3>
+<p class="price">₹349</p>
+<button class="btn" onclick="addToCart('C++ Programming',349)">Add to Cart</button>
+</div>
+
+<div class="book-card">
+<img src="images/java.jpg">
+<h3>Java Programming</h3>
+<p class="price">₹399</p>
+<button class="btn" onclick="addToCart('Java Programming',399)">Add to Cart</button>
+</div>
+
+<div class="book-card">
+<img src="images/python.jpg">
+<h3>Python Programming</h3>
+<p class="price">₹450</p>
+<button class="btn" onclick="addToCart('Python Programming',450)">Add to Cart</button>
+</div>
+
+<div class="book-card">
+<img src="images/html.jpg">
+<h3>HTML & CSS</h3>
+<p class="price">₹250</p>
+<button class="btn" onclick="addToCart('HTML & CSS',250)">Add to Cart</button>
+</div>
+
+<div class="book-card">
+<img src="images/ai.jpg">
+<h3>Artificial Intelligence</h3>
+<p class="price">₹500</p>
+<button class="btn" onclick="addToCart('Artificial Intelligence',500)">Add to Cart</button>
+</div>
+
+<div class="book-card">
+<img src="images/ml.jpg">
+<h3>Machine Learning</h3>
+<p class="price">₹550</p>
+<button class="btn" onclick="addToCart('Machine Learning',550)">Add to Cart</button>
+</div>
+
+<div class="book-card">
+<img src="images/js.jpg">
+<h3>JavaScript Programming</h3>
+<p class="price">₹380</p>
+<button class="btn" onclick="addToCart('JavaScript Programming',380)">Add to Cart</button>
+</div>
+
+<div class="book-card">
+<img src="images/react.jpg">
+<h3>React JS</h3>
+<p class="price">₹420</p>
+<button class="btn" onclick="addToCart('React JS',420)">Add to Cart</button>
+</div>
+
+<div class="book-card">
+<img src="images/node.jpg">
+<h3>Node JS</h3>
+<p class="price">₹410</p>
+<button class="btn" onclick="addToCart('Node JS',410)">Add to Cart</button>
+</div>
+
+<div class="book-card">
+<img src="images/php.jpg">
+<h3>PHP Programming</h3>
+<p class="price">₹300</p>
+<button class="btn" onclick="addToCart('PHP Programming',300)">Add to Cart</button>
+</div>
+
+<div class="book-card">
+<img src="images/mysql.jpg">
+<h3>MySQL Database</h3>
+<p class="price">₹320</p>
+<button class="btn" onclick="addToCart('MySQL Database',320)">Add to Cart</button>
+</div>
+
+</div>
+</section>
+
+<footer>
+<p>© 2026 Online Book Store</p>
+</footer>
+
+<!-- CONTACT MODAL -->
+<div id="contactModal">
+
+<div class="contact-box">
+
+<h2>Contact Us</h2>
+
+<input type="text" id="contactName" placeholder="Your Name">
+
+<input type="email" id="contactEmail" placeholder="Your Email">
+
+<textarea id="contactMessage" placeholder="Your Message"></textarea>
+
+<button class="send-btn" onclick="sendMessage()">Send</button>
+
+<button class="close-btn" onclick="closeContact()">Close</button>
+
+</div>
+
+</div>
+
+<script>
+
+/* LOGIN CHECK */
+if(localStorage.getItem("loggedIn")!=="true")
+{
+window.location.href="auth.html";
+}
+
+/* LOGOUT */
+document.getElementById("authLink").onclick=function()
+{
+localStorage.removeItem("loggedIn");
+alert("Logged out successfully");
+window.location.href="auth.html";
+};
+
+/* SEARCH */
+document.getElementById("searchInput").addEventListener("input",function(){
+
+let value=this.value.toLowerCase();
+let books=document.querySelectorAll(".book-card");
+
+books.forEach(book=>{
+
+let title=book.querySelector("h3").textContent.toLowerCase();
+
+book.style.display=title.includes(value)?"block":"none";
+
+});
+
+});
+
+/* CART */
+function addToCart(name,price)
+{
+let cart=JSON.parse(localStorage.getItem("cart"))||[];
+
+cart.push({name,price});
+
+localStorage.setItem("cart",JSON.stringify(cart));
+
+alert(name+" added to cart");
+}
+
+/* CONTACT OPEN */
+function openContact()
+{
+document.getElementById("contactModal").style.display="flex";
+}
+
+/* CONTACT CLOSE */
+function closeContact()
+{
+document.getElementById("contactModal").style.display="none";
+}
+
+/* SEND MESSAGE */
+function sendMessage()
+{
+
+let name=document.getElementById("contactName").value;
+let email=document.getElementById("contactEmail").value;
+let message=document.getElementById("contactMessage").value;
+
+if(name==""||email==""||message=="")
+{
+alert("Please fill all fields");
+return;
+}
+
+alert("Message sent successfully!");
+
+document.getElementById("contactName").value="";
+document.getElementById("contactEmail").value="";
+document.getElementById("contactMessage").value="";
+
+closeContact();
+
+}
+
+</script>
+
+</body>
+</html>
