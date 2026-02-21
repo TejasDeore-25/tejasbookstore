@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Secure Payment</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',sans-serif;
+}
+
+body{
+background:#f4f6fb;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+}
+
+.payment-container{
+background:white;
+width:420px;
+padding:30px;
+border-radius:16px;
+box-shadow:0 10px 30px rgba(0,0,0,0.1);
+text-align:center;
+}
+
+h2{
+margin-bottom:15px;
+}
+
+h3{
+margin-top:15px;
+margin-bottom:5px;
+text-align:left;
+}
+
+.info p{
+margin:5px 0;
+}
+
+.method-buttons{
+display:flex;
+gap:10px;
+margin:15px 0;
+}
+
+.method-buttons button{
+flex:1;
+padding:10px;
+border:none;
+border-radius:20px;
+cursor:pointer;
+background:#e4e6eb;
+}
+
+.method-buttons button.active{
+background:#f59e0b;
+color:white;
+}
+
+.payment-form{
+text-align:left;
+margin-top:10px;
+}
+
+.payment-form input{
+width:100%;
+padding:10px;
+margin:6px 0;
+border-radius:6px;
+border:1px solid #ccc;
+}
+
+.error{
+border:2px solid red !important;
+}
+
+.pay-btn{
+width:100%;
+padding:12px;
+margin-top:15px;
+border:none;
+border-radius:25px;
+background:#f59e0b;
+color:white;
+font-size:16px;
+cursor:pointer;
+}
+
+.pay-btn:hover{
+background:#d97706;
+}
+
+.loading,.success{
+margin-top:10px;
+display:none;
+font-weight:bold;
+}
+
+.success{
+color:green;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="payment-container">
+
+<h2>Secure Payment</h2>
+
+<div class="info">
+<p><strong>Book:</strong> <span id="bookName"></span></p>
+<p><strong>Price:</strong> ₹<span id="bookPrice"></span></p>
+</div>
+
+<!-- ADDRESS -->
+<div class="payment-form">
+
+<h3>Delivery Address</h3>
+
+<input type="text" id="fullName" placeholder="Full Name">
+
+<input type="text" id="mobile" placeholder="Mobile Number" maxlength="10">
+
+<input type="text" id="address" placeholder="Street Address">
+
+<input type="text" id="city" placeholder="City">
+
+<input type="text" id="state" placeholder="State">
+
+<input type="text" id="pincode" placeholder="Pincode" maxlength="6">
+
+</div>
+
+<!-- PAYMENT METHOD -->
+<div class="method-buttons">
+
+<button id="cardBtn" onclick="selectMethod('card')">Card</button>
+
+<button id="upiBtn" onclick="selectMethod('upi')">UPI</button>
+
+<button id="codBtn" onclick="selectMethod('cod')">COD</button>
+
+</div>
+
+<!-- CARD FORM -->
+<div id="cardForm" class="payment-form" style="display:none">
+
+<input type="text" id="cardNumber" placeholder="Card Number" maxlength="16">
+
+<input type="text" id="cardHolder" placeholder="Card Holder Name">
+
+<input type="text" id="expiry" placeholder="MM/YY" maxlength="5">
+
+<input type="password" id="cvv" placeholder="CVV" maxlength="3">
+
+</div>
+
+<!-- UPI FORM -->
+<div id="upiForm" class="payment-form" style="display:none">
+
+<input type="text" id="upiId" placeholder="Enter UPI ID">
+
+</div>
+
+<button class="pay-btn" onclick="processPayment()">Pay Now</button>
+
+<div class="loading" id="loadingText">Processing Payment...</div>
+
+<div class="success" id="successText">Payment Successful! Redirecting...</div>
+
+</div>
+
+<script>
+
+/* Load book info */
+
+let name = localStorage.getItem("selectedBook");
+let price = localStorage.getItem("selectedPrice");
+
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+if(cart.length>0 && name==="Cart Items")
+{
+let total=0;
+
+cart.forEach(item=>{
+total+=item.price*(item.qty||1);
+});
+
+document.getElementById("bookName").textContent=
+"Cart Items ("+cart.length+")";
+
+document.getElementById("bookPrice").textContent=total;
+}
+else
+{
+document.getElementById("bookName").textContent=name||"Book";
+document.getElementById("bookPrice").textContent=price||"0";
+}
+
+/* Select method */
+
+let selectedMethod="";
+
+function selectMethod(method)
+{
+
+selectedMethod=method;
+
+document.getElementById("cardForm").style.display="none";
+document.getElementById("upiForm").style.display="none";
+
+document.getElementById("cardBtn").classList.remove("active");
+document.getElementById("upiBtn").classList.remove("active");
+document.getElementById("codBtn").classList.remove("active");
+
+if(method==="card")
+{
+document.getElementById("cardForm").style.display="block";
+document.getElementById("cardBtn").classList.add("active");
+}
+
+if(method==="upi")
+{
+document.getElementById("upiForm").style.display="block";
+document.getElementById("upiBtn").classList.add("active");
+}
+
+if(method==="cod")
+{
+document.getElementById("codBtn").classList.add("active");
+}
+
+}
+
+/* Expiry auto format */
+
+document.getElementById("expiry").addEventListener("input",function(e){
+
+let value=e.target.value.replace(/\D/g,"");
+
+if(value.length>=3)
+value=value.substring(0,2)+"/"+value.substring(2,4);
+
+e.target.value=value;
+
+});
+
+/* Payment */
+
+function processPayment()
+{
+
+if(!selectedMethod)
+{
+alert("Select payment method");
+return;
+}
+
+/* Address validation */
+
+let fullName=document.getElementById("fullName");
+let mobile=document.getElementById("mobile");
+let address=document.getElementById("address");
+let city=document.getElementById("city");
+let state=document.getElementById("state");
+let pincode=document.getElementById("pincode");
+
+[fullName,mobile,address,city,state,pincode].forEach(f=>{
+f.classList.remove("error");
+});
+
+if(!fullName.value||!mobile.value||!address.value||
+!city.value||!state.value||!pincode.value)
+{
+alert("Fill complete address");
+
+if(!fullName.value) fullName.classList.add("error");
+if(!mobile.value) mobile.classList.add("error");
+if(!address.value) address.classList.add("error");
+if(!city.value) city.classList.add("error");
+if(!state.value) state.classList.add("error");
+if(!pincode.value) pincode.classList.add("error");
+
+return;
+}
+
+if(!/^\d{10}$/.test(mobile.value))
+{
+alert("Mobile must be 10 digits");
+mobile.classList.add("error");
+mobile.focus();
+return;
+}
+
+if(!/^\d{6}$/.test(pincode.value))
+{
+alert("Pincode must be 6 digits");
+pincode.classList.add("error");
+pincode.focus();
+return;
+}
+
+/* Save address */
+
+localStorage.setItem("deliveryAddress",JSON.stringify({
+
+name:fullName.value,
+mobile:mobile.value,
+address:address.value,
+city:city.value,
+state:state.value,
+pincode:pincode.value
+
+}));
+
+/* Card validation */
+
+if(selectedMethod==="card")
+{
+
+let cardNumber=document.getElementById("cardNumber");
+let holder=document.getElementById("cardHolder");
+let expiry=document.getElementById("expiry");
+let cvv=document.getElementById("cvv");
+
+if(!cardNumber.value||!holder.value||!expiry.value||!cvv.value)
+{
+alert("Fill card details");
+return;
+}
+
+if(!/^\d{16}$/.test(cardNumber.value))
+{
+alert("Card must be 16 digits");
+return;
+}
+
+if(!/^\d{3}$/.test(cvv.value))
+{
+alert("CVV must be 3 digits");
+return;
+}
+
+}
+
+/* UPI validation */
+
+if(selectedMethod==="upi")
+{
+
+let upi=document.getElementById("upiId");
+
+if(!upi.value||!upi.value.includes("@"))
+{
+alert("Invalid UPI ID");
+return;
+}
+
+}
+
+/* Payment success */
+
+document.getElementById("loadingText").style.display="block";
+
+setTimeout(()=>{
+document.getElementById("loadingText").style.display="none";
+document.getElementById("successText").style.display="block";
+},1500);
+
+setTimeout(()=>{
+
+localStorage.removeItem("cart");
+localStorage.removeItem("selectedBook");
+localStorage.removeItem("selectedPrice");
+
+window.location.href="index.html";
+
+},3000);
+
+}
+
+</script>
+
+</body>
+</html>
